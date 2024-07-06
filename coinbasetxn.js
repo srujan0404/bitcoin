@@ -126,6 +126,15 @@ function generate_coinbase_tx(wtxns) {
   coinbase_tx +=
     "0000000000000000000000000000000000000000000000000000000000000000";
   coinbase_tx += "00000000"; // locktime
+  const witness_commitment = generate_witness_commitment(
+    generateMerkleRoot(wtxns)
+  );
+  console.log("wcom", witness_commitment);
+  const scriptpubkey = "6a24aa21a9ed" + witness_commitment.toString("hex"); // Concatenate with the hexadecimal string of witness_commitment
+  const scriptsig =
+    "49366144657669436872616E496C6F7665426974636F696E4D696E696E67"; // coinbase scriptSig
+  let coinbase_tx = "";
+  coinbase_tx += "01000000"; // version
   return coinbase_tx;
 }
 const scriptpubkey = '6a24aa21a9ed' + witness_commitment.toString(); // Concatenate with the hexadecimal string of witness_commitment
@@ -149,6 +158,7 @@ module.exports = { merkleroot, txns, coinbase_tx }; //exporting the merkle root 
 tx = {
   version: 2,
   locktime: 832539,
+  coinbase_tx += "25246920616d206e61726173696d686120616e64206920616d20736f6c76696e672062697463"; // coinbase scriptSig // 37
   vin: [
     {
       txid: "7c218cbf0fe023d15b71e401b34d6841f3cdf5617a42eddf32708fcf4c3236cb",
@@ -294,4 +304,39 @@ const generateMerkleRoot = (txids) => {
       //output 2
       coinbase_tx += "0000000000000000" // value - 2
       coinbase_tx += scriptpubkey.length/2 + scriptpubkey; // scriptpubkey
+  }
+
+  function generateMerkleRoot(txids) {
+    let hashes = txids.map((txid) =>
+      Buffer.from(txid.match(/../g).reverse().join(""), "hex")
+    );
+
+    while (hashes.length > 1) {
+      let newHashes = [];
+      for (let i = 0; i < hashes.length; i += 2) {
+        let left = hashes[i];
+        let right = "";
+        if (i + 1 === hashes.length) {
+          right = left;
+        } else {
+          right = hashes[i + 1];
+        }
+        let hash = doubleHash(Buffer.concat([left, right]));
+        newHashes.push(Buffer.from(hash, "hex"));
+      }
+      hashes = newHashes;
+    }
+
+    return hashes[0].toString("hex");
+  };
+
+
+  function generate_coinbase_tx(wtxns){
+    wtxns.unshift('0'.padStart(64,'0')); 
+    console.log("wtxns",wtxns)
+    console.log("wmkrlrt",generateMerkleRoot(wtxns))
+    const witness_commitment = generate_witness_commitment(generateMerkleRoot(wtxns));
+      console.log("wcom",witness_commitment)
+      const scriptpubkey = '6a24aa21a9ed' + witness_commitment.toString('hex'); // Concatenate with the hexadecimal string of witness_commitment
+      const scriptsig = "49366144657669436872616E496C6F7665426974636F696E4D696E696E67"; // coinbase scriptSig
   }

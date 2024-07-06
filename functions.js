@@ -14,6 +14,13 @@ function toHex(value) {
         : value.toString(16).length + 1,
       "0"
     );
+
+    concatStr +=
+      littleEndian(vin.txid) +
+      littleEndian(toHex(vin.vout).padStart(8, "0")) +
+      sigSize.toString(16).padStart(2, "0") +
+      vin.scriptsig +
+      littleEndian(vin.sequence.toString(16));
 }
 
 function littleEndian(data) {
@@ -21,8 +28,38 @@ function littleEndian(data) {
   for (let i = 0; i < data.length; i += 2) {
     pairs.unshift(data.substring(i, i + 2));
   }
+  concatStr +=
+    littleEndian(vout.value.toString(16).padStart(16, "0")) +
+    toHex(vout.scriptpubkey.length / 2)
+      .toString(16)
+      .padStart(2, "0") +
+    vout.scriptpubkey;
   return pairs.join("");
 }
+
+function create_wtxid(tx) {
+  return doubleHash(
+    littleEndian(tx.version.toString(16).padStart(8, "0")) +
+      "00" + //marker
+      "01" + //flag
+      tx.vin.length.toString(16).padStart(2, "0") + //number of inputs
+      concVin(tx) + //inputs
+      tx.vout.length.toString(16).padStart(2, "0") + //number of outputs
+      concVout(tx) + //outputs
+      conc_witness(tx) + //witness
+      littleEndian(tx.locktime.toString(16).padStart(8, "0"))
+  ); //locktime
+}
+
+ for (const vinEntry of tx.vin) {
+      const witness = vinEntry.witness;
+      if (witness) { // Check if witness is defined
+          concstr += (witness.length).toString(16).padStart(2, '0');
+          for (const wit of witness) {
+              concstr += (wit.length / 2).toString(16).padStart(2, '0') + wit;
+          }
+        }
+  }
 
 function ripemd160(data) {
   const hash = crypto.createHash("ripemd160");
