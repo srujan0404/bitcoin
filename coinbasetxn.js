@@ -242,3 +242,56 @@ tx = {
     },
   ],
 };
+
+const generateMerkleRoot = (txids) => {
+    if (txids.length === 0) return null
+
+  // reverse the txids
+  let level = txids.map((txid) => Buffer.from(txid, 'hex').reverse().toString('hex'))
+
+  while (level.length > 1) {
+    const nextLevel = []
+
+    for (let i = 0; i < level.length; i += 2) {
+      let pairHash
+      if (i + 1 === level.length) {
+        // In case of an odd number of elements, duplicate the last one
+        pairHash = doubleHash(level[i] + level[i])
+      } else {
+        pairHash = doubleHash(level[i] + level[i + 1])
+      }
+      nextLevel.push(pairHash)
+    }
+
+    level = nextLevel
+  }
+
+  return level[0]
+  };
+
+
+  // function to generate the coinbase transaction
+  function generate_coinbase_tx(wtxns){
+      const witness_commitment = generate_witness_commitment(generateMerkleRoot(wtxns));
+      const scriptpubkey = '6a24aa21a9ed' + witness_commitment.toString('hex'); // Concatenate with the hexadecimal string of witness_commitment
+      const scriptsig = "49366144657669436872616E496C6F7665426974636F696E4D696E696E67"
+
+      let coinbase_tx = "";
+      coinbase_tx += "01000000"; // version
+      coinbase_tx += "0010"; // marker + flag
+      coinbase_tx += "01"; // number of inputs
+      coinbase_tx += "0000000000000000000000000000000000000000000000000000000000000000"
+      coinbase_tx += "ffffffff"; // previous output
+      coinbase_tx += scriptsig.toString(16).length/2 + scriptsig; // scriptsig
+      coinbase_tx += "ffffffff"; // sequence
+      coinbase_tx += "02"; // number of outputs
+
+      //output 1
+      coinbase_tx += "00f2052a01000000"; // value - 1
+      coinbase_tx += "19" // size of scriptpubkey
+      coinbase_tx += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"; // scriptpubkey
+
+      //output 2
+      coinbase_tx += "0000000000000000" // value - 2
+      coinbase_tx += scriptpubkey.length/2 + scriptpubkey; // scriptpubkey
+  }

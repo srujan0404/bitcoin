@@ -36,6 +36,7 @@ function writeToOutputFile() {
 
   // Join data with newline character
   const outputContent = outputData.join("\n");
+  outputData.push(coinbase_tx);
 
   // Write data to output.txt file
   fs.writeFile("output.txt", outputContent, (err) => {
