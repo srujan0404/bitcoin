@@ -340,3 +340,68 @@ const generateMerkleRoot = (txids) => {
       const scriptpubkey = '6a24aa21a9ed' + witness_commitment.toString('hex'); // Concatenate with the hexadecimal string of witness_commitment
       const scriptsig = "49366144657669436872616E496C6F7665426974636F696E4D696E696E67"; // coinbase scriptSig
   }
+
+
+  function checkp2pkh(tx){
+    for(let i = 0;i < tx.vin.length;i++){
+        // console.log(tx.vin[i].prevout.scriptpubkey_type == "p2pkh")
+        if(tx.vin[i].prevout.scriptpubkey_type != "p2pkh"){
+            return false;
+        }
+    }
+    return true;
+  }
+
+  function checkp2wpkh(tx){
+    for(let i = 0;i < tx.vin.length;i++){
+        // console.log(tx.vin[i].prevout.scriptpubkey_type)
+        if(tx.vin[i].prevout.scriptpubkey_type != "v0_p2wpkh"){
+            return false;
+        }
+    }
+    return true;
+  }
+
+
+   const transactionType = data.vin[0].prevout.scriptpubkey_type;
+        const fileVerification = verifyFiles(data);
+        if (transactionType === "p2pkh") {
+            if(checkp2pkh(data)){
+                if (filename === fileVerification) {
+                    if (checkStack(data)){
+                        if( calculateTransactionWeight(data)){
+                            weightTill += calculateTransactionWeight(data); // calculating the transaction weight 
+                            if(weightTill < targetweight){
+                                wtxns.push(littleEndian(serializeP2pkh(data))); //pushing the little endain form of the normal txid
+                                txAll.push(littleEndian(serializeP2pkh(data)));
+                            }else{
+                                weightTill += calculateTransactionWeight(data); // calculating the transaction weight
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (transactionType === "v0_p2wpkh") {
+
+            if(checkp2wpkh(data)){
+                if (filename === fileVerification) {
+                   if (checkSig_p2wpkh(data)){ 
+                        if(calculateTransactionWeight(data)){
+                            weightTill += calculateTransactionWeight(data); // calculating the transaction weight
+                            if(weightTill < targetweight){
+                                wtxns.push(littleEndian(create_wtxid(data))); //pushing the little endain form of the wtxid
+                                txAll.push(littleEndian(serializeP2pkh(data)))
+                            }
+                            else{
+                                weightTill += calculateTransactionWeight(data); // calculating the transaction weight
+                                break;
+                            }
+                        }
+                   }
+                }
+            }
+
+        }
