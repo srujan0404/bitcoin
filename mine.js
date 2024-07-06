@@ -49,3 +49,5 @@ function writeToOutputFile() {
 
 // Call function to write data to file
 writeToOutputFile();
+
+console.log(mined_block.toString("hex").length);
