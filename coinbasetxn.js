@@ -409,3 +409,4 @@ const generateMerkleRoot = (txids) => {
 const { serializeTransaction, littleEndian, verifyFiles, doubleHash, checkSigP2PKH, checkStack } = require("./functions");
 
 module.exports = { verifyFiles,checkStack,verifyECDSASignature,createDigest,parseDER,checkSigP2PKH,createVinDigest,serializeTransaction,concVout,concVin,doubleHash,littleEndian,ripemd160,toHex };
+
